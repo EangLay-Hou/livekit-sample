@@ -5,9 +5,11 @@ import 'package:avatar_livekit_app/features/avatar/widgets/chat_input_row.dart';
 import 'package:avatar_livekit_app/features/avatar/widgets/message_layer.dart';
 import 'package:avatar_livekit_app/features/avatar/widgets/status_overlay.dart';
 import 'package:avatar_livekit_app/features/avatar/widgets/video_layer.dart';
+import 'package:avatar_livekit_app/main.dart';
 import 'package:avatar_livekit_app/ui/palette.dart';
 import 'package:avatar_livekit_app/ui/widgets/widgets.dart';
 import 'package:flutter/material.dart' hide ConnectionState;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart' show LocalVideoTrack, VideoTrack, VideoTrackRenderer, VideoViewFit;
 
@@ -28,6 +30,8 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
   double _previewDx = 0;
   double _previewDy = 0;
   bool _previewInitialized = false;
+  bool _messagesExpanded = false;
+  bool _hudVisible = true;
 
   @override
   void initState() {
@@ -78,6 +82,11 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
   }
 
   Widget _buildMessageItem(ChatMessage msg, Animation<double> animation) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = colorScheme.onSurface;
+    final userBubble = colorScheme.primary.withValues(alpha: 0.16);
+    final botBubble = colorScheme.surface.withValues(alpha: 0.7);
+    final labelColor = colorScheme.primary;
     return SizeTransition(
       sizeFactor: CurvedAnimation(parent: animation, curve: Curves.easeOut),
       child: Align(
@@ -87,7 +96,7 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: msg.isUser ? AppPalette.greenDeep.withValues(alpha: 0.14) : AppPalette.mint.withValues(alpha: 0.35),
+            color: msg.isUser ? userBubble : botBubble,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -99,7 +108,7 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     msg.label!,
-                    style: TextStyle(fontSize: 12, color: AppPalette.greenDeep, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 12, color: labelColor, fontWeight: FontWeight.w600),
                   ),
                 ),
               AnimatedSize(
@@ -117,15 +126,15 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
                               child: AnimatedDots(
                                 maxDots: 3,
                                 period: const Duration(milliseconds: 240),
-                                style: const TextStyle(fontSize: 16),
+                                style: TextStyle(fontSize: 16, color: textColor),
                               ),
                             ),
                           ],
-                          style: const TextStyle(fontSize: 16),
+                          style: TextStyle(fontSize: 16, color: textColor),
                         ),
                         softWrap: true,
                       )
-                    : Text(msg.text, style: const TextStyle(fontSize: 16), softWrap: true),
+                    : Text(msg.text, style: TextStyle(fontSize: 16, color: textColor), softWrap: true),
               ),
             ],
           ),
@@ -244,51 +253,110 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
     final state = ref.watch(avatarChatControllerProvider);
     final controller = ref.read(avatarChatControllerProvider.notifier);
     final connected = state.connected;
+    final phase = state.connectionPhase;
+    final isBusy =
+        phase == ConnectionPhase.connecting ||
+        phase == ConnectionPhase.disconnecting ||
+        phase == ConnectionPhase.reconnecting;
+    final statusLabel = switch (phase) {
+      ConnectionPhase.connecting => 'Connecting',
+      ConnectionPhase.disconnecting => 'Disconnecting',
+      ConnectionPhase.reconnecting => 'Reconnecting',
+      _ => connected ? 'Disconnect' : 'Connect',
+    };
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final overlayStyle = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+    );
 
     return Scaffold(
-      backgroundColor: AppPalette.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: AppPalette.heroGradient)),
+        systemOverlayStyle: overlayStyle,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: AppPalette.heroGradientFor(Theme.of(context).brightness),
+          ),
+        ),
         title: const Text('Avatar Chat'),
         actions: [
           TextButton(
-            onPressed: state.connecting || connected ? null : controller.connect,
+            onPressed: isBusy
+                ? null
+                : connected
+                ? controller.disconnect
+                : controller.connect,
             style: TextButton.styleFrom(
-              foregroundColor: AppPalette.greenDeep,
+              foregroundColor: connected
+                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                  : colorScheme.primary,
               textStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            child: const Text('Connect'),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(statusLabel),
+                if (isBusy) ...[
+                  const SizedBox(width: 6),
+                  const AnimatedDots(
+                    maxDots: 3,
+                    period: Duration(milliseconds: 240),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Toggle theme',
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark ? Icons.dark_mode : Icons.light_mode,
+              color: colorScheme.primary,
+            ),
+            onPressed: () {
+              final notifier = ref.read(themeModeProvider.notifier);
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              notifier.state = isDark ? ThemeMode.light : ThemeMode.dark;
+            },
+          ),
+          IconButton(
+            tooltip: _hudVisible ? 'Hide HUD' : 'Show HUD',
+            icon: Icon(_hudVisible ? Icons.visibility_off : Icons.visibility, color: colorScheme.primary),
+            onPressed: () {
+              setState(() {
+                _hudVisible = !_hudVisible;
+              });
+            },
           ),
           IconButton(
             onPressed: connected ? controller.toggleCamera : null,
             icon: state.cameraBusy
-                ? const AnimatedDots(
+                ? AnimatedDots(
                     maxDots: 2,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppPalette.greenDeep),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colorScheme.primary),
                   )
                 : Icon(state.cameraEnabled ? Icons.videocam : Icons.videocam_off),
             tooltip: state.cameraEnabled ? 'Stop camera' : 'Start camera',
-            color: AppPalette.greenDeep,
-          ),
-          TextButton(
-            onPressed: connected ? controller.disconnect : null,
-            style: TextButton.styleFrom(
-              foregroundColor: AppPalette.neutralDark,
-              textStyle: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            child: const Text('Disconnect'),
+            color: colorScheme.primary,
           ),
         ],
       ),
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: DecoratedBox(decoration: BoxDecoration(gradient: AppPalette.heroGradient)),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: AppPalette.heroGradientFor(Theme.of(context).brightness),
+              ),
+            ),
           ),
           GestureDetector(
             behavior: HitTestBehavior.translucent,
@@ -305,8 +373,10 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final areaHeight = constraints.maxHeight;
-                          final videoHeight = areaHeight / 2;
-                          final listHeight = areaHeight / 1.7;
+                          final videoHeight = areaHeight;
+                          final collapsedHeight = (areaHeight * 0.25).clamp(140.0, 220.0);
+                          final expandedHeight = (areaHeight * 0.5).clamp(220.0, areaHeight);
+                          final listHeight = _messagesExpanded ? expandedHeight : collapsedHeight;
                           return Stack(
                             children: [
                               VideoLayer(
@@ -321,23 +391,33 @@ class _AvatarChatPageState extends ConsumerState<AvatarChatPage> {
                                     _previewDy = offset.dy;
                                   });
                                 },
-                                statusOverlay: StatusOverlay(
-                                  status: state.status,
-                                  activeRoom: state.activeRoom,
-                                  remoteCount: state.remoteParticipantCount,
-                                  error: state.error,
-                                  connectionPhase: state.connectionPhase,
-                                ),
+                                statusOverlay: _hudVisible
+                                    ? StatusOverlay(
+                                        status: state.status,
+                                        activeRoom: state.activeRoom,
+                                        remoteCount: state.remoteParticipantCount,
+                                        error: state.error,
+                                        connectionPhase: state.connectionPhase,
+                                        showCenteredDots: false,
+                                      )
+                                    : const SizedBox.shrink(),
                                 showLocalPreview: false,
                               ),
-                              MessageLayer(
-                                height: listHeight,
-                                listKey: _listKey,
-                                scrollController: _scroll,
-                                messages: state.messages,
-                                itemBuilder: _buildMessageItem,
-                                chatStatus: state.chatStatus,
-                              ),
+                              if (_hudVisible)
+                                MessageLayer(
+                                  height: listHeight,
+                                  listKey: _listKey,
+                                  scrollController: _scroll,
+                                  messages: state.messages,
+                                  itemBuilder: _buildMessageItem,
+                                  chatStatus: state.chatStatus,
+                                  expanded: _messagesExpanded,
+                                  onToggleExpanded: () {
+                                    setState(() {
+                                      _messagesExpanded = !_messagesExpanded;
+                                    });
+                                  },
+                                ),
                               if (state.localVideoTrack != null)
                                 _buildLocalPreview(constraints: constraints, track: state.localVideoTrack!),
                             ],

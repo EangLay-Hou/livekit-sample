@@ -1,4 +1,3 @@
-import 'package:avatar_livekit_app/ui/palette.dart';
 import 'package:flutter/material.dart';
 
 import 'listening_badge.dart';
@@ -21,15 +20,18 @@ class ChatInputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double barHeight = 52;
+    final colorScheme = Theme.of(context).colorScheme;
+    final surfaceColor = colorScheme.surface.withValues(alpha: 0.85);
+    final borderColor = colorScheme.primary.withValues(alpha: 0.35);
     if (micOn) {
       return SizedBox(
         height: barHeight,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppPalette.cream.withValues(alpha: 0.7),
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppPalette.greenDeep.withValues(alpha: 0.35)),
+            border: Border.all(color: borderColor),
           ),
           child: Row(
             children: [
@@ -37,7 +39,7 @@ class ChatInputBar extends StatelessWidget {
               const Spacer(),
               IconButton(
                 onPressed: onMicToggle,
-                icon: const Icon(Icons.stop_circle, color: AppPalette.greenDeep),
+                icon: Icon(Icons.stop_circle, color: colorScheme.primary),
               ),
             ],
           ),
@@ -50,22 +52,22 @@ class ChatInputBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: AppPalette.cream.withValues(alpha: 0.7),
+          color: surfaceColor,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppPalette.greenDeep.withValues(alpha: 0.35)),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: controller,
-                style: const TextStyle(color: AppPalette.textPrimary),
-                cursorColor: AppPalette.greenDeep,
+                style: TextStyle(color: colorScheme.onSurface),
+                cursorColor: colorScheme.primary,
                 onSubmitted: onSubmitted,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
                   hintText: 'Text message',
-                  hintStyle: TextStyle(color: AppPalette.textMuted),
+                  hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),

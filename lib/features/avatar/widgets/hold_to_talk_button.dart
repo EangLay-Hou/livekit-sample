@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:avatar_livekit_app/ui/palette.dart';
 import 'package:avatar_livekit_app/ui/widgets/widgets.dart';
 
 class HoldToTalkButton extends StatelessWidget {
@@ -27,6 +26,7 @@ class HoldToTalkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final active = isHolding || isLatched;
     final showSend = hasText;
     final tapEnabled = !isLoading;
@@ -47,19 +47,20 @@ class HoldToTalkButton extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: active ? AppPalette.greenDeep.withValues(alpha: 0.18) : AppPalette.cream.withValues(alpha: 0.7),
+            color:
+                active ? colorScheme.primary.withValues(alpha: 0.18) : colorScheme.surface.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppPalette.greenDeep.withValues(alpha: active ? 0.6 : 0.35)),
+            border: Border.all(color: colorScheme.primary.withValues(alpha: active ? 0.6 : 0.35)),
           ),
           child: Center(
             child: isLoading
-                ? const AnimatedDots(
+                ? AnimatedDots(
                     maxDots: 3,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppPalette.greenDeep),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.primary),
                   )
                 : Icon(
                     showSend ? Icons.send : (isHolding || isLatched ? Icons.mic : Icons.mic_none),
-                    color: AppPalette.greenDeep.withValues(alpha: active || showSend ? 1 : 0.9),
+                    color: colorScheme.primary.withValues(alpha: active || showSend ? 1 : 0.9),
                   ),
           ),
         ),

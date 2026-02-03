@@ -4,20 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:avatar_livekit_app/features/avatar/avatar.dart';
 import 'package:avatar_livekit_app/ui/app_theme.dart';
 
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: App()));
 }
 
-class App extends StatelessWidget {
+class App extends ConsumerWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       home: const AvatarChatPage(autoConnect: false),
     );
   }

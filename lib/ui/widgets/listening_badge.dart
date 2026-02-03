@@ -1,4 +1,3 @@
-import 'package:avatar_livekit_app/ui/palette.dart';
 import 'package:flutter/material.dart';
 
 class ListeningBadge extends StatelessWidget {
@@ -8,7 +7,9 @@ class ListeningBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled ? AppPalette.greenDeep : AppPalette.neutral;
+    final colorScheme = Theme.of(context).colorScheme;
+    final color =
+        enabled ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6);
     final text = enabled ? 'Listening...' : 'Mic is off';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

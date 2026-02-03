@@ -12,6 +12,7 @@ class AppTheme {
         seedColor: AppPalette.greenDeep,
         surface: AppPalette.cream,
       ).copyWith(
+        primary: AppPalette.darkPrimary,
         onSurface: AppPalette.textPrimary,
         onPrimary: Colors.white,
         error: AppPalette.error,
@@ -37,23 +38,26 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppPalette.greenDeep,
+        seedColor: AppPalette.darkPrimary,
         brightness: Brightness.dark,
       ).copyWith(
-        surface: const Color(0xFF1A2A27),
-        onSurface: AppPalette.cream,
+        primary: AppPalette.darkPrimary,
+        surface: AppPalette.darkSurface,
+        onSurface: AppPalette.darkTextPrimary,
+        background: AppPalette.darkBackground,
+        onBackground: AppPalette.darkTextPrimary,
         onPrimary: Colors.white,
         error: AppPalette.error,
       ),
-      scaffoldBackgroundColor: const Color(0xFF0F1F1C),
+      scaffoldBackgroundColor: AppPalette.darkBackground,
       textTheme: ThemeData.dark().textTheme.apply(
-            bodyColor: AppPalette.cream,
-            displayColor: AppPalette.cream,
+            bodyColor: AppPalette.darkTextPrimary,
+            displayColor: AppPalette.darkTextPrimary,
           ),
       appBarTheme: const AppBarTheme(
-        foregroundColor: AppPalette.cream,
+        foregroundColor: AppPalette.darkTextPrimary,
         titleTextStyle: TextStyle(
-          color: AppPalette.cream,
+          color: AppPalette.darkTextPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),

@@ -110,6 +110,10 @@ class AvatarChatController extends StateNotifier<AvatarChatState> {
         micLatched: false,
         cameraEnabled: false,
         chatStatus: state.chatMode == ChatMode.voice ? 'Mic off' : 'Ready',
+        remoteParticipantCount: 0,
+        remoteVideoTracks: const <VideoTrack>[],
+        clearLocalVideoTrack: true,
+        clearError: true,
         clearActiveRoom: true,
       );
     } finally {
@@ -628,7 +632,6 @@ class AvatarChatController extends StateNotifier<AvatarChatState> {
   }
 
   Future<void> disconnect() async {
-    if (room.connectionState == ConnectionState.disconnected) return;
     state = state.copyWith(status: 'Disconnecting...', connectionPhase: ConnectionPhase.disconnecting);
     await _unpublishMic(reason: 'disconnect');
     await _stopCamera();

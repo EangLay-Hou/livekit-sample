@@ -1,6 +1,6 @@
+import 'package:avatar_livekit_app/ui/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
-import 'package:avatar_livekit_app/ui/widgets/widgets.dart';
 import 'hold_to_talk_button.dart';
 
 class ChatInputRow extends StatelessWidget {
@@ -46,10 +46,7 @@ class ChatInputRow extends StatelessWidget {
             onPressed: !micBusy ? onMicToggle : null,
             icon: Icon(micEnabled ? Icons.mic : Icons.mic_off),
             label: micBusy
-                ? const AnimatedDots(
-                    maxDots: 3,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  )
+                ? const AnimatedDots(maxDots: 3, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))
                 : Text(micEnabled ? 'Stop Mic' : 'Start Mic'),
           ),
         ],
