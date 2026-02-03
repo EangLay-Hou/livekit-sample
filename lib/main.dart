@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'features/avatar/livekit_avatar_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:avatar_livekit_app/features/avatar/avatar.dart';
+import 'package:avatar_livekit_app/ui/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const App());
+  runApp(const ProviderScope(child: App()));
 }
 
 class App extends StatelessWidget {
@@ -13,10 +16,8 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       home: const AvatarChatPage(autoConnect: false),
     );
   }
